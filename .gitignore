@@ -1,0 +1,5 @@
+src/*.o
+test/*.o
+test/final
+src/release
+src/dev
