@@ -1,6 +1,8 @@
 src/*.o
+src/*.so
 test/*.o
 test/final
 src/release
 src/dev
 data
+.venv/

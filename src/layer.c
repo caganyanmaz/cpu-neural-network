@@ -67,10 +67,6 @@ void lyr_destroy(Layer *obj)
 
 Matrix *lyr_forward_propogate(const Layer *obj, const Matrix *v, double (*act) (double))
 {
-	if (v->width != 1 || v->height != obj->ninodes)
-	{
-		printf("FUCK\n");
-	}
 	assert(v->width == 1 && v->height == obj->ninodes);
 	Matrix *m = m_apply(v, act);
 	m_inline_rmul(m, obj->weights);
@@ -111,14 +107,11 @@ void lyr_update(Layer *obj, double step_size)
 {
 	// Updating the weights
 	m_inline_scalar_mul(obj->accumulated_weight_gradient, -step_size);
-	printf("Weight change: %f\n", m_get_norm(obj->accumulated_weight_gradient));
-
 	m_inline_add(obj->weights, obj->accumulated_weight_gradient);
 	m_inline_apply(obj->accumulated_weight_gradient, clear_func);
 
 	// Updating the biases
 	m_inline_scalar_mul(obj->accumulated_bias_gradient, -step_size);
-	printf("Bias change: %f\n", m_get_norm(obj->accumulated_bias_gradient));
 	m_inline_add(obj->biases, obj->accumulated_bias_gradient);
 	m_inline_apply(obj->accumulated_bias_gradient, clear_func);
 }

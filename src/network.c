@@ -15,8 +15,7 @@ Network *n_create(double (*activate) (double), double (*d_activate) (double), si
 	obj->d_activate = d_activate;
 	obj->layer_count = arg_count - 1;
 	obj->layers = malloc(sizeof(Layer*) * obj->layer_count);
-	obj->inv_temperature = 1;
-	size_t current_size = va_arg(args, size_t);
+	obj->inv_temperature = 1; size_t current_size = va_arg(args, size_t);
 	for (int i = 0; i < obj->layer_count; i++)
 	{
 		size_t next_size = va_arg(args, size_t);

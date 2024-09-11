@@ -2,43 +2,12 @@
 #include <math.h>
 #include <limits.h>
 #include <stdio.h>
+#include "algorithms.h"
 #include "test.h"
 
 #define DIGIT_COUNT 10 // In case you don't know
 #define GRADIENT_CHANGE_EPSILON 1e-5
 
-double ReLU(double x)
-{
-	return x >= 0 ? x : 0;
-}
-
-double d_ReLU(double x)
-{
-	return x >= 0 ? 1 : 0;
-}
-
-
-#define LEAK_RATE 0.1
-double leaky_ReLU(double x)
-{
-	return x >= 0 ? x : LEAK_RATE * x;
-}
-
-double d_leaky_ReLU(double x)
-{
-	return x >= 0 ? 1 : LEAK_RATE;
-}
-
-#define ALPHA 1
-double ELU(double x)
-{
-	return x >= 0 ? x : ALPHA * (exp(x) - 1);
-}
-
-double d_ELU(double x)
-{
-	return x >= 0 ? 1 : ALPHA * exp(x);
-}
 
 Test *t_create(size_t nrows, size_t ncols)
 {
@@ -61,8 +30,7 @@ void t_destroy(Test *obj)
 }
 
 void t_create_input(Matrix *input, const IDX3_DATA *images, size_t image_size, size_t i)
-{
-	for (int j = i * image_size; j < (i+1) * image_size; j++)
+{ for (int j = i * image_size; j < (i+1) * image_size; j++)
 	{
 		m_set(input, j - i * image_size, 0, (double)((images->data)[j]) / ((double)UCHAR_MAX));
 	}
@@ -93,7 +61,6 @@ void t_train_for_single_epoch(Test *obj, IDX3_DATA *images, IDX1_DATA *labels, s
 		total_loss += loss;
 	}
 	n_update(obj->network, GRADIENT_CHANGE_EPSILON);
-	printf("Epoch finished, average loss: %f\n", total_loss / (r - l));
 }
 
 void t_test_accuracy(const Test *obj, IDX3_DATA *images, IDX1_DATA *labels, size_t l, size_t r)
@@ -118,7 +85,6 @@ void t_test_accuracy(const Test *obj, IDX3_DATA *images, IDX1_DATA *labels, size
 		if (res == (labels->data)[i])
 			ncorrect++;
 	}
-	printf("%d\n", ncorrect);
 	double accuracy = (double) ncorrect / (r - l);
 	printf("Accuracy: %f\n", accuracy);
 }

@@ -18,6 +18,15 @@
 volatile bool continue_running_main_thread = true;
 const char *DEFAULT_MODEL_FILE_NAME = "default.model";
 
+void save_to_file(const Network *network)
+{
+	FILE *file = fopen(DEFAULT_MODEL_FILE_NAME, "w");
+	printf("Saving model to file %s...", DEFAULT_MODEL_FILE_NAME);
+	n_save_to_file(network, file);
+	printf("Saving complete\n");
+	fclose(file);
+}
+
 void *train_model(void *_args)
 {
 	// Reading training / test data
@@ -55,20 +64,16 @@ void *train_model(void *_args)
 	int batch_size = train_images.nimages / 64;
 	for (int i = 0; continue_running_main_thread; i++)
 	{
-		printf("Epoch: %d\n", i+1);
-		t_train_for_single_epoch(test, &train_images, &train_labels, 0, batch_size);
+		t_train_for_single_epoch(test, &train_images, &train_labels, (i % 63) * batch_size, ((i % 63) + 1) * batch_size);
 		if ((i % 100) == 0)
+		{
+			printf("Epoch: %d\n", i / 100);
 			t_test_accuracy(test, &test_images, &test_labels, 0, test_images.nimages);
+			save_to_file(test->network);
+		}
 	}
-
 	n_print(test->network);
-
-	{
-		FILE *file = fopen(DEFAULT_MODEL_FILE_NAME, "w");
-		printf("Saving model to file %s", DEFAULT_MODEL_FILE_NAME);
-		n_save_to_file(test->network, file);
-		fclose(file);
-	}
+	save_to_file(test->network);
 	printf("Exiting thread...\n");
 	return NULL;
 }
