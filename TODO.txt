@@ -1,0 +1,3 @@
+- Add momentum
+- Make every matrix allocation free (instead of returning and allocated pointer, we should pass the pointer as an argument) and allocate everything in main
+- Write the matrix functions in CUDA (especially multiplication)

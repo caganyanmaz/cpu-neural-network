@@ -188,6 +188,36 @@ double m_get_norm(const Matrix *obj)
 	return sqrt(sum);
 }
 
+void m_save_to_file(const Matrix *obj, FILE *file)
+{
+	fprintf(file, "%d %d\n", obj->height, obj->width);
+	for (int i = 0; i < obj->height; i++)
+	{
+		for (int j = 0; j < obj->width; j++)
+		{
+			fprintf(file, "%f ", m_get(obj, i, j));
+		}
+		fputc('\n', file);
+	}
+}
+
+void *m_load_from_file(FILE *file)
+{
+	Matrix *obj = malloc(sizeof(*obj));
+	fscanf(file, "%d %d\n", &obj->height, &obj->width);
+	obj->arr = malloc(obj->width * obj->height * sizeof(*(obj->arr)));
+	for (int i = 0; i < obj->height; i++)
+	{
+		for (int j = 0; j < obj->width; j++)
+		{
+			double val;
+			fscanf(file, "%lf", &val);
+			m_set(obj, i, j, val);
+		}
+	}
+	return obj;
+}
+
 void m_print(const Matrix *obj)
 {
 	for (int i = 0; i < obj->height; i++)

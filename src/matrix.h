@@ -1,4 +1,5 @@
 #pragma once
+#include <stdio.h>
 #include <stdbool.h>
 
 typedef struct
@@ -9,6 +10,7 @@ typedef struct
 } Matrix;
 
 Matrix *m_create(int height, int width);
+void *m_load_from_file(FILE *file);
 void m_destroy(Matrix *obj);
 void m_move(Matrix *obj, Matrix *other);
 
@@ -34,5 +36,7 @@ double m_get(const Matrix *obj, int i, int j);
 double m_get_norm(const Matrix *obj);
 
 bool m_is_in_range(const Matrix *obj, int i, int j);
+
+void m_save_to_file(const Matrix *obj, FILE *file);
 
 void m_print(const Matrix *obj);

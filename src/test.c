@@ -47,6 +47,13 @@ Test *t_create(size_t nrows, size_t ncols)
 	return obj;
 }
 
+Test *t_create_with_file(size_t nrows, size_t ncols, FILE *file)
+{
+	Test *obj = malloc(sizeof(*obj));
+	obj->network = n_load_from_file(leaky_ReLU, d_leaky_ReLU, file);
+	return obj;
+}
+
 void t_destroy(Test *obj)
 {
 	n_destroy(obj->network);
@@ -115,4 +122,5 @@ void t_test_accuracy(const Test *obj, IDX3_DATA *images, IDX1_DATA *labels, size
 	double accuracy = (double) ncorrect / (r - l);
 	printf("Accuracy: %f\n", accuracy);
 }
+
 

@@ -33,6 +33,15 @@ double normal_rand_func(double in)
 	return get_normal_random(0, sqrt(2.0 / (tmpninodes + tmpnonodes)));
 }
 
+void lyr_create_accumulated_gradients(Layer *obj)
+{
+	assert(obj->biases->width == 1);
+	obj->accumulated_weight_gradient = m_create(obj->weights->height, obj->weights->width);
+	obj->accumulated_bias_gradient   = m_create(obj->biases->height, 1);
+	m_inline_apply(obj->accumulated_bias_gradient, clear_func);
+	m_inline_apply(obj->accumulated_weight_gradient, clear_func);
+}
+
 Layer *lyr_create(size_t ninodes, size_t nonodes)
 {
 	Layer *obj = malloc(sizeof(*obj));
@@ -40,14 +49,11 @@ Layer *lyr_create(size_t ninodes, size_t nonodes)
 	obj->nonodes = nonodes;
 	obj->weights = m_create(nonodes, ninodes);
 	obj->biases  = m_create(nonodes, 1);
-	obj->accumulated_weight_gradient = m_create(nonodes, ninodes);
-	obj->accumulated_bias_gradient   = m_create(nonodes, 1);
 	tmpninodes = obj->ninodes;
 	tmpnonodes = obj->ninodes;
 	m_inline_apply(obj->weights, normal_rand_func);
 	m_inline_apply(obj->biases, clear_func);
-	m_inline_apply(obj->accumulated_bias_gradient, clear_func);
-	m_inline_apply(obj->accumulated_weight_gradient, clear_func);
+	lyr_create_accumulated_gradients(obj);
 	return obj;
 }
 void lyr_destroy(Layer *obj)
@@ -115,6 +121,23 @@ void lyr_update(Layer *obj, double step_size)
 	printf("Bias change: %f\n", m_get_norm(obj->accumulated_bias_gradient));
 	m_inline_add(obj->biases, obj->accumulated_bias_gradient);
 	m_inline_apply(obj->accumulated_bias_gradient, clear_func);
+}
+
+void lyr_save_to_file(const Layer *obj, FILE *file)
+{
+	fprintf(file, "%lu %lu\n", obj->ninodes, obj->nonodes);
+	m_save_to_file(obj->weights, file);
+	m_save_to_file(obj->biases, file);
+}
+
+Layer *lyr_load_from_file(FILE *file)
+{
+	Layer *obj = malloc(sizeof(*obj));
+	fscanf(file, "%lu %lu", &obj->ninodes, &obj->nonodes);
+	obj->weights = m_load_from_file(file);
+	obj->biases  = m_load_from_file(file);
+	lyr_create_accumulated_gradients(obj);
+	return obj;
 }
 
 void lyr_print(const Layer *obj)

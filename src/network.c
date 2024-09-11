@@ -27,11 +27,16 @@ Network *n_create(double (*activate) (double), double (*d_activate) (double), si
 	return obj;
 }
 
-void n_destroy(Network *obj)
+void destroy_layers(Network *obj)
 {
 	for (int i = 0; i < obj->layer_count; i++)
 		lyr_destroy((obj->layers)[i]);
 	free(obj->layers);
+}
+
+void n_destroy(Network *obj)
+{
+	destroy_layers(obj);
 	free(obj);
 }
 
@@ -154,6 +159,32 @@ void n_update(Network *obj, double step_size)
 	{
 		lyr_update((obj->layers)[i], step_size);
 	}
+}
+
+// Not saving the activation rn, it'll use leaky_ReLU
+void n_save_to_file(const Network *obj, FILE *file)
+{
+	fprintf(file, "%lu\n", obj->layer_count);
+	for (int i = 0; i < obj->layer_count; i++)
+	{
+		lyr_save_to_file((obj->layers)[i], file);
+	}
+}
+
+Network *n_load_from_file(double (*activate) (double), double (*d_activate) (double), FILE *file)
+{
+	Network *obj = malloc(sizeof(*obj));
+	obj->activate = activate;
+	obj->d_activate = d_activate;
+	fscanf(file, "%lu", &obj->layer_count);
+	obj->layers = malloc(sizeof(Layer*) * obj->layer_count);
+	obj->inv_temperature = 1;
+	size_t last_size = 0;
+	for (int i = 0; i < obj->layer_count; i++)
+	{
+		(obj->layers)[i] = lyr_load_from_file(file);
+	}
+	return obj;
 }
 
 void n_print(const Network *obj)
