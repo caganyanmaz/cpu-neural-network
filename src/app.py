@@ -8,6 +8,7 @@ import pygame
 
 IMAGE_HEIGHT    = 28
 IMAGE_WIDTH     = 28
+IMAGE_SIZE      = IMAGE_HEIGHT * IMAGE_WIDTH
 CELL_SIZE       = 30
 FOOTER_HEIGHT   = 100
 PRIMARY_COLOR   = (0, 0, 0)
@@ -28,8 +29,8 @@ def main():
     window = pygame.display.get_surface()
     board = create_board()
     board[1][2] = True
-    paint_board(window, board)
-    paint_footer(window, [color_button, guess_button])
+    draw_board(window, board)
+    draw_footer(window, [color_button, guess_button])
     pygame.display.flip()
 
     running = True
@@ -40,30 +41,32 @@ def main():
             if event.type == pygame.QUIT: 
                 running = False
             if event.type == pygame.MOUSEBUTTONUP:
-                print("Mouse up!")
                 pos = pygame.mouse.get_pos()
                 if is_colliding_with_button(color_button, pos):
-                    print("Color button clicked!")
                     cell_color_option = not cell_color_option
                 if is_colliding_with_button(guess_button, pos):                    
-                    print(guess(board))
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                print("hi")
-
-        paint_board(window, board)
-        paint_footer(window, [color_button])
+                    print(guess(api, network, board))
+        if pygame.mouse.get_pressed()[0]:
+            j, i = pygame.mouse.get_pos()
+            i //= CELL_SIZE
+            j //= CELL_SIZE
+            if 0 <= i < IMAGE_HEIGHT and 0 <= j < IMAGE_WIDTH:
+                board[i][j] = cell_color_option
+        #Render the board
+        draw_board(window, board)
+        #draw_footer(window, [color_button])
         pygame.display.flip()
 
     api.api_destroy_network(network)
 
-def paint_board(window, board):
+def draw_board(window, board):
     for i in range(IMAGE_HEIGHT):
         for j in range(IMAGE_WIDTH):
-            pygame.draw.rect(window, SECONDARY_COLOR, pygame.Rect(i * CELL_SIZE, j * CELL_SIZE, CELL_SIZE, CELL_SIZE))
+            pygame.draw.rect(window, SECONDARY_COLOR, pygame.Rect(j * CELL_SIZE, i * CELL_SIZE, CELL_SIZE, CELL_SIZE))
             if not board[i][j]:
-                pygame.draw.rect(window, PRIMARY_COLOR, pygame.Rect(i * CELL_SIZE + 1, j * CELL_SIZE + 1, CELL_SIZE - 2, CELL_SIZE - 2))
+                pygame.draw.rect(window, PRIMARY_COLOR, pygame.Rect(j * CELL_SIZE + 1, i * CELL_SIZE + 1, CELL_SIZE - 2, CELL_SIZE - 2))
  
-def paint_footer(window, buttons):
+def draw_footer(window, buttons):
     font = pygame.font.Font(None, 35)
     for button in buttons:
         text = font.render(button["text"], True, (0, 0, 0))
@@ -80,8 +83,14 @@ def is_colliding_with_button(button, pos):
 
 
         
-def guess(board):
-    return "Connect the API"
+def guess(api, network, board):
+    flattened_board = []
+    for row in board:
+        for cell in row:
+            flattened_board.append(255 if cell else 0)
+    arr = (ctypes.c_ubyte * IMAGE_SIZE)(*flattened_board)
+    res = api.api_get_result(network, arr)
+    return f"The guess of the neural network is {res}"
 
    
 
@@ -99,7 +108,7 @@ def configure_api_functions(api):
     api.api_load_network_from_file.argtypes = [ctypes.c_char_p]
     api.api_load_network_from_file.restype = ctypes.c_void_p
     
-    api.api_destroy_network.argtypes = [ctypes.c_char_p]
+    api.api_destroy_network.argtypes = [ctypes.c_void_p]
     api.api_destroy_network.restype  = None
 
     api.api_get_result.argtypes = [ctypes.c_void_p, ctypes.POINTER(ctypes.c_ubyte)]
